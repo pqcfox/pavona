@@ -291,16 +291,25 @@ class InformationFlowGraph:
             while i < len(sources):
                 node1 = sources[i]
                 j = i + 1
+
+                # Track whether we should restart for the current index i, as
+                # after we union node1 with a subsequent node in sources, it may
+                # be the case that node1 becomes newly adjacent to a previously
+                # explored node
+                restart = False
+
                 while j < len(sources):
                     node2 = sources[j]
                     node12 = node1.union(node2)
                     if node12 is not None:
                         node1 = node12
                         del sources[j]
+                        restart = True
                     else:
                         j += 1
                 sources[i] = node1
-                i += 1
+                if not restart:
+                    i += 1
             self.flow[sink] = set(sources)
 
     def update(self, other: 'InformationFlowGraph') -> None:

@@ -298,17 +298,27 @@ def simplify_control_deps(
     '''Combine adjacent control-flow dependencies.'''
     new_control_deps = {}
     keys = list(control_deps.keys())
-    for i in range(len(keys)):
+    i = 0
+    while i < len(keys):
         node1 = keys[i]
         deps1 = control_deps[node1]
+
+        # Track whether we should restart for the current index i, as after we
+        # union node1 with a subsequent node in sources, it may be the case that
+        # node1 becomes newly adjacent to a previously explored node
+        restart = False
+
         for node2 in keys[i + 1:]:
             if deps1 != control_deps[node2] or node1.union(node2) is None:
                 continue
             node1 = node1.union(node2)
+            restart = True
             if node1 in control_deps:
                 # This happens if the union already existed in the dictionary.
                 deps1 |= control_deps[node1]
         new_control_deps[node1] = deps1
+        if not restart:
+            i += 1
     return new_control_deps
 
 
